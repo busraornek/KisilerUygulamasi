@@ -12,8 +12,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.database.DatabaseReference
 
-class KisilerAdapter(private val mContex:Context,private val kisilerListe:List<Kisiler>)
+class KisilerAdapter(private val mContex:Context,
+                     private val kisilerListe:List<Kisiler>,
+                      private val refKisiler:DatabaseReference)
    :RecyclerView.Adapter<KisilerAdapter.CardTasarimTutucu>() {
 
 
@@ -52,7 +55,7 @@ class KisilerAdapter(private val mContex:Context,private val kisilerListe:List<K
               when(menuItem.itemId){
                   R.id.action_sil -> {
                       Snackbar.make(holder.imageViewNokta,"${kisi.kisi_ad} silinsin mi?",Snackbar.LENGTH_SHORT).setAction("EVET"){
-
+                           refKisiler.child(kisi.kisi_id!!).removeValue()
                       }.show()
                       true
                   }
@@ -84,6 +87,12 @@ class KisilerAdapter(private val mContex:Context,private val kisilerListe:List<K
         ad.setPositiveButton("GÜncelle"){ dialogInterface, i->
             val kisiAd = editTextAd.text.toString().trim()
             val kisiTel = editTextTel.text.toString().trim()
+            //güncelleme
+            val bilgiler = HashMap<String,Any>()
+            bilgiler.put("kisi_ad",kisiAd)
+            bilgiler.put("kisi_tel",kisiTel)
+            refKisiler.child(kisi.kisi_id!!).updateChildren(bilgiler)
+
 
             Toast.makeText(mContex,"$kisiAd - $kisiTel",Toast.LENGTH_SHORT).show()
         }

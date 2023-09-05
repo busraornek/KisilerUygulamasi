@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity(),SearchView.OnQueryTextListener {
         val dp = FirebaseDatabase.getInstance()
         refKisiler = dp.getReference("kisiler")
         kisilerListe = ArrayList()
-        adapter = KisilerAdapter(this,kisilerListe)
+        adapter = KisilerAdapter(this,kisilerListe,refKisiler)
         binding.rv.adapter = adapter
         tumKisiler()
 
@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity(),SearchView.OnQueryTextListener {
             val kisiAd = editTextAd.text.toString().trim()
             val kisiTel = editTextTel.text.toString().trim()
 
+            val kisi = Kisiler("",kisiAd,kisiTel)
+            refKisiler.push().setValue(kisi)
+
             Toast.makeText(applicationContext,"$kisiAd - $kisiTel",Toast.LENGTH_SHORT).show()
         }
         ad.setNegativeButton("İptal"){ dialogInterface , i->
@@ -76,10 +79,12 @@ class MainActivity : AppCompatActivity(),SearchView.OnQueryTextListener {
     }
 
     override fun onQueryTextSubmit(p0: String?): Boolean {
+        aramaYap(p0.toString())
         Log.e("Gösterilen arama",p0.toString())
        return true
     }
     override fun onQueryTextChange(p0: String?): Boolean {
+        aramaYap(p0.toString())
        Log.e("Harf girdikçe",p0.toString())
         return true
     }
@@ -93,6 +98,25 @@ class MainActivity : AppCompatActivity(),SearchView.OnQueryTextListener {
                     if(kisi != null){
                         kisi.kisi_id = c.key
                         kisilerListe.add(kisi)
+                    }
+                }
+                adapter.notifyDataSetChanged()
+            }
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+    fun aramaYap(aramaKelime:String){
+        refKisiler.addValueEventListener(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot){
+                kisilerListe.clear()
+                for(c in snapshot.children){
+                    val kisi = c.getValue(Kisiler::class.java)
+                    if(kisi != null){
+                        if(kisi.kisi_ad!!.contains(aramaKelime,true)){
+                            kisi.kisi_id = c.key
+                            kisilerListe.add(kisi)
+                        }
                     }
                 }
                 adapter.notifyDataSetChanged()
